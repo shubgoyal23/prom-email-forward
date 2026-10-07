@@ -1,0 +1,11 @@
+node_modules/
+npm-debug.log*
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+.DS_Store
+.vscode/
+.idea/

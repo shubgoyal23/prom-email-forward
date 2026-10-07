@@ -1,0 +1,22 @@
+route:
+  receiver: admin-email
+  # One email per alert type per server; e.g. all down containers on a host arrive together
+  group_by: ['alertname', 'instance']
+  group_wait: 30s        # wait to batch alerts that fire together
+  group_interval: 5m     # min gap before emailing about new alerts in the same group
+  repeat_interval: 4h    # re-send reminder while still firing
+  routes:
+    - matchers: ['severity="critical"']
+      receiver: admin-email
+      repeat_interval: 1h
+
+receivers:
+  - name: admin-email
+    webhook_configs:
+      - url: 'http://alert-forwarder:3000/alerts'   # or http://<forwarder-host>:3000/alerts
+        send_resolved: true
+        max_alerts: 20
+        http_config:
+          authorization:
+            type: Bearer
+            credentials: 'change-me'   # must equal WEBHOOK_TOKEN in the forwarder's .env

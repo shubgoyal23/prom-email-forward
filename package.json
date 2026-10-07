@@ -1,0 +1,15 @@
+{
+  "name": "prom-email-forward",
+  "version": "1.0.0",
+  "description": "Forwards Alertmanager webhook alerts to admins via the Email Worker API",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}

@@ -1,0 +1,34 @@
+services:
+  alert-forwarder:
+    build: .
+    image: prom-email-forward:latest
+    container_name: alert-forwarder
+    restart: unless-stopped
+    init: true # forwards SIGTERM so the container stops cleanly
+    env_file: .env
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - monitoring
+      - email_network
+
+networks:
+  monitoring:
+    external: true
+  email_network:
+    external: true

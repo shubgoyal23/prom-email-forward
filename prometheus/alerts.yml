@@ -1,0 +1,62 @@
+groups:
+  - name: VPS Alerts
+    rules:
+      - alert: InstanceDown
+        expr: up == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ $labels.job }} target {{ $labels.instance }} is down"
+          description: "Prometheus has not been able to scrape {{ $labels.instance }} for more than 2 minutes."
+
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance)(rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 75
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU on {{ $labels.instance }}"
+          description: "CPU usage is {{ $value | printf \"%.1f\" }}% (above 75% for 5 minutes)."
+          value: "{{ $value }}"
+          threshold: "75"
+
+      - alert: HighMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100 > 85
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High Memory on {{ $labels.instance }}"
+          description: "Memory usage is {{ $value | printf \"%.1f\" }}% (above 85% for 5 minutes)."
+          value: "{{ $value }}"
+          threshold: "85"
+
+      - alert: DiskAlmostFull
+        expr: |
+          (node_filesystem_size_bytes{fstype!~"tmpfs|overlay|squashfs|nsfs|ramfs",fstype!=""}
+            - node_filesystem_avail_bytes{fstype!~"tmpfs|overlay|squashfs|nsfs|ramfs",fstype!=""})
+          / node_filesystem_size_bytes{fstype!~"tmpfs|overlay|squashfs|nsfs|ramfs",fstype!=""} * 100 > 80
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Disk almost full on {{ $labels.instance }} ({{ $labels.mountpoint }})"
+          description: "{{ $labels.mountpoint }} is {{ $value | printf \"%.1f\" }}% full (above 80% for 10 minutes)."
+          value: "{{ $value }}"
+          threshold: "80"
+
+  - name: Docker Alerts
+    rules:
+      - alert: DockerContainerDown
+        # A container seen in the last hour that is no longer reported by cAdvisor
+        expr: |
+          max by (instance, name) (max_over_time(container_last_seen{name!=""}[1h]))
+          unless on (instance, name)
+          max by (instance, name) (container_last_seen{name!=""})
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Docker container {{ $labels.name }} is down on {{ $labels.instance }}"
+          description: "Container {{ $labels.name }} has not been running for more than 2 minutes."
