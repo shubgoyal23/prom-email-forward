@@ -1,0 +1,29 @@
+version: 2
+updates:
+  # Bumps the pinned action versions in .github/workflows.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns:
+          - "*"
+
+  # Bumps package.json / package-lock.json. Minor and patch updates share one
+  # PR; major updates (e.g. Express 5) stay separate so they get a real review.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      npm-minor-patch:
+        update-types:
+          - minor
+          - patch
+
+  # Bumps the Node base image in the Dockerfile.
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
